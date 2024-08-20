@@ -1,0 +1,15 @@
+<nav>
+    <a href="/" class="site-title"><h2>Users API</h2></a>
+    <ul>
+        <!-- <li><a href="/">Home</a></li> -->
+        <% if (user) { %>
+            <li><a href="/">Home | Welcome <%= user.email %></a></li>
+            <li><a href="/users">Users</a></li>
+            <!-- <li><a href="/about">About</a></li> -->
+            <li><a href="/logout">Log Out</a></li>
+        <% } else { %>
+            <li><a href="/signup">Sign Up</a></li>
+            <li><a href="/login">Log In</a></li>
+        <% } %>
+    </ul>
+</nav>

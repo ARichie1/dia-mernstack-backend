@@ -1,0 +1,19 @@
+<%- include('./partials/header.ejs'); %>
+<%- include('./partials/nav.ejs'); %>
+
+
+<% if(users.length > 0) { %>
+    <% users.forEach(user => { %>
+        <div class="user-content">
+            <div class="email">Welcome <%= user.email %></div>    
+        </div>
+    <% }) %>
+<% } %>
+
+
+
+
+
+
+
+<%- include('./partials/footer.ejs'); %>

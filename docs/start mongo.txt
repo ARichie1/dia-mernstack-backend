@@ -1,0 +1,5 @@
+Path >>
+cd c:\program files\mongodb\server\5.0\bin
+
+Application >> 
+mongod.exe

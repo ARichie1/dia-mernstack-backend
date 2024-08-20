@@ -1,0 +1,267 @@
+:root{
+    --bk : #131212;
+    --ck : skyblue;
+}
+body{
+    max-width: 100vw;
+    margin: 20px auto;
+    padding: 0 20px;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background: var(--bk);
+    overflow-x: hidden;
+}
+h1, h2, h3, h4, ul, li, a, p, input, label, button, footer{
+    margin: 0;padding: 0;
+    font-family: sans-serif;
+    color: var(--ck);
+    list-style: none;
+    text-decoration: none;
+}
+h2{margin-bottom: 40px;}
+h3{
+    text-transform: capitalize;
+    margin-bottom: 0px;
+}
+
+header{
+    display: flex;
+    align-items: center;
+}
+header img{
+    width: 250px;
+    margin-right: 40px;
+}
+header h2{
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+header h3{
+    font-size: 1.6em;
+    margin-bottom: 10px;
+    margin-left: 2px;
+    color: #999;
+}
+header .btn{
+    margin-top: 20px;
+    padding: 12px 13px;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: inline-block;
+    font-size: 0.8em;
+}
+
+nav{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+}
+nav .site-title{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+nav .site-title h2{
+    margin: 0%;
+}
+nav ul{
+    width: 80%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+nav li{
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 10px;
+}
+nav p, nav a{
+    color: var(--ck);
+}
+
+.btn{
+    border-radius: 36px;
+    background: #fee996;
+}
+form{
+    width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 0 auto;
+    /* padding: 10px; */
+    box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background: white;
+}
+.form-group{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* .signupForm{
+    width: 600px;
+}
+.loginForm{
+    width: 360px;
+} */
+form h2{
+    font-size: 2.4em;
+    font-weight: 900;
+    margin-bottom: 40px;
+}
+input{
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 1em;
+    width: 90%;
+}
+label{
+    width: 90%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    /* padding: 10px 12px; */
+    margin: 20px 0 10px;
+}
+button{
+    display: block;
+    margin: 30px;
+    padding: 10px 26px;
+    border: 0;
+    border-radius: 36px;
+    background: #fee996;
+    letter-spacing: 2px;
+    text-align: uppercase;
+    font-weight: 700;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+.error{
+    color: #ff0099;
+    margin: 10px 2px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.recipes{
+    display: grid;
+    grid-template-columns:  1fr 1fr 1fr;
+    column-gap: 30px;
+    row-gap: 30px;
+    margin: 80px auto;
+    max-width: 1200px;
+}
+.recipes img{
+    width: 100px;
+    margin: -30px auto 20px;
+}
+
+
+
+.content{
+    margin-left: 20px;
+}
+.content h2{
+    text-align: center;
+}
+.content .blog{
+    margin: 10px auto;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-left: 6px solid crimson;
+    cursor: pointer;
+}
+.content a{
+    width: 100%;height: 100%;
+    cursor: pointer;
+}
+.content a:hover h3{
+    color: crimson;
+}
+.create-blog form{
+    max-width: 400px;
+    margin: 0 auto;
+}
+.create-blog input,
+.create-blog textarea{
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+    background: silver;
+}
+.create-blog label{
+    display: block;
+    margin-top: 24px;
+}
+textarea{
+    height: 120px;
+}
+.create-blog button{
+    float: right;
+    margin-top: 20px;
+    background: crimson;
+    color: white;
+    padding: 6px;
+    border: 0;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.blog{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.blog img{
+    width: 50px;
+    height: 50px;
+}
+.image-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.image-container img{
+    width: 300px;
+    height: 300px;
+}
+
+.single-blog .header{
+    display: flex;align-items: center;
+    justify-content: space-between;
+}
+.single-blog h2{
+    width: 100%;text-align: left !important;
+}
+.single-blog .delete{
+    width: 100%;margin-bottom: 10px;
+    text-align: right !important;
+}
+.single-blog .delete p{
+    width: 30%;text-align: center !important;
+    margin-bottom: 10px; margin-left: 70%;
+    background: crimson;
+    cursor: pointer;
+}
+.single-blog .blog_body{
+    width: 96%;padding: 2%;
+    text-align: left !important;
+    border: 3px solid crimson;
+}
+
+
+footer{
+    color: #777;
+    text-align: center;
+    margin: 80px auto 20px;
+}
