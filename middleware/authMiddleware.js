@@ -8,13 +8,13 @@ const requireAuth = (req, res, next) => {
         jwt.verify(token, 'richyrichyrichy', (err, decodeToken) => {
             if (err) {
                 console.log(err.message);
-                res.redirect('/login');
+                res.redirect('/api/user/login');
             } else {
                 next();
             }
         })
     } else {
-        res.redirect('/login');
+        res.redirect('/api/user/login');
     }
 }
 

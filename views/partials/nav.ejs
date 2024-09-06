@@ -6,10 +6,10 @@
             <li><a href="/">Home | Welcome <%= user.email %></a></li>
             <li><a href="/users">Users</a></li>
             <!-- <li><a href="/about">About</a></li> -->
-            <li><a href="/logout">Log Out</a></li>
+            <li><a href="/api/user/logout">Log Out</a></li>
         <% } else { %>
-            <li><a href="/signup">Sign Up</a></li>
-            <li><a href="/login">Log In</a></li>
+            <li><a href="/api/user/signup">Sign Up</a></li>
+            <li><a href="/api/user/login">Log In</a></li>
         <% } %>
     </ul>
 </nav>

@@ -50,10 +50,10 @@ app.get('/', (req, res) => {
 });
 
 // Auth Routes
-app.use(authRoutes);
+app.use("/api/user", authRoutes);
 
 // User Routes
-app.use(userRoutes);
+app.use("/api/user", userRoutes);
 
 // About Page
 app.get('/about', requireAuth, (req, res) => {
