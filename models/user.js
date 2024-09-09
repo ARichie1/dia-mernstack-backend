@@ -128,6 +128,7 @@ UserSchema.statics.signup = async function(email, password){
 
     userDefaultsValues.email = email
     userDefaultsValues.password = hash
+    userDefaultsValues.username = "user"
 
     const user = await this.create(userDefaultsValues)
     console.log(`I am about to save this doc to the db  : ${user}`);

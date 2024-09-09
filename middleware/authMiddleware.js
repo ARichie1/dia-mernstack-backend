@@ -2,19 +2,26 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 
 // Gives Permission To Only Logged In Users To Access Certain Pages
-const requireAuth = (req, res, next) => {
-    const token = req.cookies.jwt;
-    if (token) {
-        jwt.verify(token, 'richyrichyrichy', (err, decodeToken) => {
-            if (err) {
-                console.log(err.message);
-                res.redirect('/api/user/login');
-            } else {
-                next();
-            }
+const requireAuth = async (req, res, next) => {
+    const { authorization } = req.headers
+
+    if (!authorization) {
+        return res.status(401).json({
+            error: "Authorization token required"
         })
-    } else {
-        res.redirect('/api/user/login');
+    }
+
+    const token = authorization.split(" ")[1]
+
+    try{
+        const {id} = jwt.verify(token, process.env.SECRET)
+        req.user = await User.findOne({id}).select("_id")
+        next()
+    }
+    catch (err) {
+        res.status(401).json({
+            error: "Request is not authorized"
+        })
     }
 }
 

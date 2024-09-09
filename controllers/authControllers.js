@@ -21,6 +21,10 @@ const handleErrors = (err) => {
         errorsObject.email = 'Email as been used Already';
         return errorsObject;
     }
+    if (err.message == 'Email already in use') {
+        errorsObject.email = 'Email as been used Already';
+        return errorsObject;
+    }
     if (err.message.includes('user validation failed')) {
         Object.values(err.errors).forEach(({properties}) => {
             errorsObject[properties.path] = properties.message
@@ -36,7 +40,7 @@ const maxAge = 3 * 60 * 60 * 24;
 const createToken = (id) => {
     return jwt.sign(
         {id},
-        'richyrichyrichy',
+        process.env.SECRET,
         {expiresIn: maxAge}
     )
 }
@@ -83,7 +87,7 @@ const login = async (req, res) => {
         res.cookie('jwt', token, 
                 {maxAge: 1000 * maxAge, httpOnly: true}
         )
-        res.status(201).json({user: user._id});
+        res.status(200).json({email, token});
     }
     catch (err) {
         const retrievedErrorsObject = handleErrors(err);

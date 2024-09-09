@@ -1,32 +1,52 @@
 const express = require('express');
 const {ObjectId} = require('mongodb')
 const User = require('../models/user');
+const { inGame, settings, username } = require('../models/userDefaults');
 
 // GET ALL USERS
-const getUsers = (req, res) => {
-    User.find()
-    .then((data) => {
-        res.status(200).render('users', {title: 'users', users: data});
-    })
-    .catch((err) => {
-        res.status(404).render('index', {title: 'Home', error: err});
-    })
+const getUsers = async (req, res) => {
+    try {
+        console.log((req.user._id).toString());
+        const users = await User.find({})
+        res.status(200).json({users});
+    } catch (error) {
+        res.status(404).json({errors: "request failed"})
+    }
 }
 
 // GET SIGN IN USER
-const getUser = (req, res) => {
-    if (ObjectId.isValid(req.params.id)) {
-        let id = req.params.id;
-        User.findById(ObjectId(id))
-        .then((response) => {
-            res.status(200).render('user', {title: `User : ${response.email}`, user: response});
-        })
-        .catch((err) => {
-            res.status(404).render('login', {title: 'Users', error: err});
-        })
-    }
-    else{
-        res.redirect(`/signup`);
+const getUser = async (req, res) => {
+    // if (ObjectId.isValid(req.params.id)) {
+        // let id = req.params.id;
+    //     console.log(req.user._id);
+    //     let id = req.user._id
+        
+    //     User.findById(ObjectId(id))
+    //     .then((response) => {
+    //         res.status(200).render('user', {title: `User : ${response.email}`, user: response});
+    //     })
+    //     .catch((err) => {
+    //         res.status(404).render('login', {title: 'Users', error: err});
+    //     })
+    // }
+    // else{
+    //     res.redirect(`/signup`);
+    // }
+    try {
+        console.log((req.user._id).toString());
+        let id = req.user._id
+        const user = await User.findById(ObjectId(id))
+        const userDetails = {
+            email: user.email,
+            username: user.username,
+            profileImg: user.imgSrc,
+            finance: user.finance,
+            inGame: user.inGame,
+            settings: user.settings
+        }
+        res.status(200).json({user: userDetails});
+    } catch (error) {
+        res.status(404).json({errors: "request failed"})
     }
 }
 

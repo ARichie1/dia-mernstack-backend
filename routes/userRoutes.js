@@ -3,11 +3,14 @@ const userControllers = require('../controllers/userControllers');
 const { requireAuth } = require('../middleware/authMiddleware');
 const router = express.Router();
 
+// require auth for all user route
+router.use(requireAuth)
+
 // GET ALL USERS
-router.get('/users', requireAuth, userControllers.getUsers)
+router.get('/users', userControllers.getUsers)
 
 // GET SIGN IN USER
-router.get('/user/:id', userControllers.getUser)
+router.get('/user', userControllers.getUser)
 
 // VIEW ANOTHER REGISTERED USER
 router.get('/user/:myid/view/:theirid', userControllers.viewAnotherUser)
