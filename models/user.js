@@ -3,50 +3,42 @@ const {isEmail} = require('validator');
 const bcrypt = require('bcryptjs')
 const userDefaultsValues = require("../models/userDefaults")
 
+const SocialSchema = {
+    title: {type: String},
+    value: {type: String}
+}
+
 const DepositSchema = new mongoose.Schema({
-    token : {type: String,}, 
-    chain : {type: String,},
-    depositType : {type: String,},
-    senderAddress : {type: String,}, 
+    token : {type: String}, 
+    chain : {type: String},
+    depositType : {type: String},
+    senderAddress : {type: String}, 
     unitDeposited : {type: Number}
 }, {timestamps: true})
 
-const TokenSchema = new mongoose.Schema({
+const TokenSchema = {
+    title: {type: String},
     balance : {type: Number},
     depositHistory: [DepositSchema]
-})
-
-const purchaseHistorySchema = new mongoose.Schema({
+}
+const PurchaseHistorySchema = new mongoose.Schema({
     item: {type: String},
     purchasedWith: {type: String},
     amountPurchased: {type: String},
     unitPurchased: {type: String}
 }, {timestamps: true})
 
-const FinanceSchema = new mongoose.Schema({
-    address: {type: Number},
-    keys: [TokenSchema],
-    dia: [TokenSchema],
-    usdt: [TokenSchema],
-    purchaseHistory : [purchaseHistorySchema ]
-})
-
-const GuessesSchema = new mongoose.Schema({
-    title : String,
-    pages : Number
-})
-
-const PowerUpSchema = new mongoose.Schema({
+const PowerUpSchema = {
     active: {type: Boolean},
     duration: {type: Number}
-})
+}
 
 const PowerUpsSchema = new mongoose.Schema({
-    timeFreezer: [PowerUpSchema],
-    timeBooster: [PowerUpSchema],
-    moveBooster: [PowerUpSchema],
-    detectiveMode: [PowerUpSchema],
-    wizardMode: [PowerUpSchema]
+    timeFreezer: PowerUpSchema,
+    timeBooster: PowerUpSchema,
+    moveBooster: PowerUpSchema,
+    detectiveMode: PowerUpSchema,
+    wizardMode: PowerUpSchema
 })
 
 const InGameSchema = new mongoose.Schema({
@@ -60,11 +52,41 @@ const InGameSchema = new mongoose.Schema({
     won : {type: Boolean},
     lose : {type: Boolean},
     myCode: {type: String},
-    myGuesses : [GuessesSchema],
-    opponentsGuesses : [GuessesSchema],
+    guesses : {type: Array},
     moves : {type: Number},
     time : {type: Number},
-    powerUps : [PowerUpsSchema]
+    powerUps : PowerUpsSchema
+})
+
+const RankAndTeamSchema = {
+    title: {type: String},
+    value: {type: String},
+    badge: {type: String}
+}
+const GamePlaySocialsSchema = {
+    rank : RankAndTeamSchema, 
+    team : RankAndTeamSchema
+}
+const PlayHistorySchema = {
+    title: {type: String},
+    gameplayed: {type: Number},
+    wins: {type: Number},
+    losses: {type: Number}
+}
+const SinglePlayerGamePlayHistoriesSchema = new mongoose.Schema({
+    vsComputer: PlayHistorySchema,
+    survivalMode: PlayHistorySchema,
+    storyMode: PlayHistorySchema
+})
+const MultiplayerPlayHistorySchema = new mongoose.Schema({
+    title: {type: String}, 
+    total: PlayHistorySchema,
+    whenHost: PlayHistorySchema, 
+    whenJoin: PlayHistorySchema
+})
+const MultiplayerGamePlayHistoriesSchema = new mongoose.Schema({
+    offlineMultiplayer: MultiplayerPlayHistorySchema,
+    onlineMultiplayer: MultiplayerPlayHistorySchema
 })
 
 const SettingsSchema = new mongoose.Schema({
@@ -89,16 +111,33 @@ const UserSchema = new mongoose.Schema({
     },
     username : {type: String},
     country: {type: String},
-    imgSrc: {type: String},
+    profileImage: {
+        value: {type: String},
+        pos: {type: Number},
+        posId:{type: Number}
+    },
+    socials: {
+        twitter: SocialSchema, 
+        discord: SocialSchema,
+        telegram: SocialSchema, 
+        twitch: SocialSchema,
+        steam: SocialSchema, 
+        epicGames: SocialSchema
+    },
     finance: {
         address: {type: Number},
-        keys: [TokenSchema],
-        dia: [TokenSchema],
-        usdt: [TokenSchema],
-        purchaseHistory : [purchaseHistorySchema]
+        keys: TokenSchema,
+        dia: TokenSchema,
+        usdt: TokenSchema,
+        purchaseHistory : [PurchaseHistorySchema]
     },
-    inGame: [InGameSchema],
-    settings: [SettingsSchema]
+    inGame: InGameSchema,
+    gameHistory: {
+        gamePlaySocials: GamePlaySocialsSchema,
+        singlePlayerGamePlayHistories: SinglePlayerGamePlayHistoriesSchema,
+        multiplayerGamePlayHistories: MultiplayerGamePlayHistoriesSchema
+    },
+    settings: SettingsSchema
 }, {timestamps: true});
 
 // Fire A Function Before Document Is Saved To DB,

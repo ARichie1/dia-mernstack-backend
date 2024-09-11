@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const cookie = require('cookie-parser');
-const {requireAuth, checkUser} = require('./middleware/authMiddleware');
+const {requireAuth} = require('./middleware/authMiddleware');
 
 //The Express App
 const app = express();
@@ -40,9 +40,6 @@ app.use(cookie());
 app.use(morgan('dev'));
 
 // Page Routing
-
-// Check Log In user
-app.get('*', checkUser);
 
 // Home Page Route
 app.get('/', (req, res) => {

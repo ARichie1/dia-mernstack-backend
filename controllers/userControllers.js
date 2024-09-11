@@ -1,7 +1,7 @@
 const express = require('express');
 const {ObjectId} = require('mongodb')
 const User = require('../models/user');
-const { inGame, settings, username } = require('../models/userDefaults');
+const { inGame, settings, username, socials } = require('../models/userDefaults');
 
 // GET ALL USERS
 const getUsers = async (req, res) => {
@@ -16,32 +16,21 @@ const getUsers = async (req, res) => {
 
 // GET SIGN IN USER
 const getUser = async (req, res) => {
-    // if (ObjectId.isValid(req.params.id)) {
-        // let id = req.params.id;
-    //     console.log(req.user._id);
-    //     let id = req.user._id
-        
-    //     User.findById(ObjectId(id))
-    //     .then((response) => {
-    //         res.status(200).render('user', {title: `User : ${response.email}`, user: response});
-    //     })
-    //     .catch((err) => {
-    //         res.status(404).render('login', {title: 'Users', error: err});
-    //     })
-    // }
-    // else{
-    //     res.redirect(`/signup`);
-    // }
     try {
-        console.log((req.user._id).toString());
-        let id = req.user._id
+        let id = (req.user._id).toString()
         const user = await User.findById(ObjectId(id))
+        
+        console.log(user.socials);
+        
         const userDetails = {
             email: user.email,
             username: user.username,
-            profileImg: user.imgSrc,
+            country: user.country,
+            profileImage: user.profileImage,
+            socials: user.socials,
             finance: user.finance,
             inGame: user.inGame,
+            gameHistory: user.gameHistory,
             settings: user.settings
         }
         res.status(200).json({user: userDetails});

@@ -2,11 +2,21 @@
 const playerDefaultValue = {
     email: "",
     password: "",
-    username: "",
-    imgSrc: "../../../assets/images/faces/asta3.jpeg",
+    username: "user",
+    country: "usa",
+    profileImage: {value: "gow.jpg", pos: 300, posId: 3},
+    socials: {
+        twitter: {title: "twitter", value: ""},
+        discord: {title: "discord", value: ""},
+        telegram: {title: "telegram", value: ""},
+        twitch: {title: "twitch", value: ""},
+        steam: {title: "steam", value: ""},
+        epicGames: {title: "epic games", value: ""}
+    },
     finance : {
         address : "",
         keys : {
+            title: "keys",
             balance : 9,
             depositHistory : [
                 {
@@ -33,6 +43,7 @@ const playerDefaultValue = {
             ]
         },
         dia : {
+            title: "token",
             balance : 100,
             depositHistory : [
                 {
@@ -46,6 +57,7 @@ const playerDefaultValue = {
             ]
         },
         usdt : {
+            title: "usdt",
             balance : 150,
             depositHistory : [
                 {
@@ -75,8 +87,7 @@ const playerDefaultValue = {
         won : false,
         lose : false,
         myCode: "",
-        myGuesses : [],
-        opponentsGuesses : [],
+        guesses : [],
         moves : null,
         time : null,
         powerUps : {
@@ -99,6 +110,31 @@ const playerDefaultValue = {
             wizardMode : {
                 active: false,
                 duration: 5
+            }
+        }
+    },
+    gameHistory: {
+        gamePlaySocials: {
+            rank : {title: "rank", value: "088", badge: ""}, 
+            team : {title: "team", value: "", badge: ""}
+        },
+        singlePlayerGamePlayHistories: {
+            vsComputer: {title: "Vs Computer", gameplayed: 0, wins: 0, losses: 0},
+            survivalMode: {title: "Survival Mode", gameplayed: 0, wins: 0, losses: 0},
+            storyMode: {title: "Story Mode", gameplayed: 0, wins: 0, losses: 0}
+        },
+        multiplayerGamePlayHistories: {
+            offlineMultiplayer: {
+                title: "Offline Multiplayer", 
+                total: {title: "total", gameplayed: 0, wins: 0, losses: 0},
+                whenHost: {title: "whenHost", gameplayed: 0, wins: 0, losses: 0}, 
+                whenJoin: {title: "whenJoin", gameplayed: 0, wins: 0, losses: 0}
+            },
+            onlineMultiplayer: {
+                title: "Online Multiplayer",
+                total: {title: "total", gameplayed: 0, wins: 0, losses: 0},
+                whenHost: {title: "whenHost", gameplayed: 0, wins: 0, losses: 0}, 
+                whenJoin: {title: "whenJoin", gameplayed: 0, wins: 0, losses: 0}
             }
         }
     },
