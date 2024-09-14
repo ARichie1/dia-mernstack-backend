@@ -76,17 +76,17 @@ const playerDefaultValue = {
             {item: "keys", purchasedWith: "dia", amountPurchased: 200, unitPurchased: 2}
         ]
     },
+    myCode: {secret: ""},
     inGame: {
         connected: true,
         ready: false,
         host: true,
         join: false,
-        opponent: {},
+        opponent: "",
         wins : 10,
         losses : 2,
         won : false,
         lose : false,
-        myCode: "",
         guesses : [],
         moves : null,
         time : null,
@@ -117,6 +117,10 @@ const playerDefaultValue = {
         gamePlaySocials: {
             rank : {title: "rank", value: "088", badge: ""}, 
             team : {title: "team", value: "", badge: ""}
+        },
+        totalGamePlayHistories: {
+            title: "Total Game Play", 
+            gameplayed: 0, wins: 0, losses: 0
         },
         singlePlayerGamePlayHistories: {
             vsComputer: {title: "Vs Computer", gameplayed: 0, wins: 0, losses: 0},

@@ -2,6 +2,7 @@ const express = require('express');
 const {ObjectId} = require('mongodb')
 const User = require('../models/user');
 const { inGame, settings, username, socials } = require('../models/userDefaults');
+const { keys } = require('lodash');
 
 // GET ALL USERS
 const getUsers = async (req, res) => {
@@ -20,8 +21,6 @@ const getUser = async (req, res) => {
         let id = (req.user._id).toString()
         const user = await User.findById(ObjectId(id))
         
-        console.log(user.socials);
-        
         const userDetails = {
             email: user.email,
             username: user.username,
@@ -39,6 +38,28 @@ const getUser = async (req, res) => {
     }
 }
 
+// GET SIGN IN USER
+const getOpponent = async (req, res) => {
+    try {
+        let id = req.params.theirid;
+        const user = await User.findById(ObjectId(id))
+
+        const opponentDetails = {
+            username: user.username,
+            country: user.country,
+            profileImage: user.profileImage,
+            inGame: user.inGame,
+            keys: user.finance.keys.balance,
+            token: user.finance.dia.balance,
+            usdt: user.finance.usdt.balance,
+            rank: user.gameHistory.gamePlaySocials.rank.value,
+            gamePlay: user.gameHistory.totalGamePlayHistories
+        }
+        res.status(200).json({user: opponentDetails});
+    } catch (error) {
+        res.status(404).json({errors: "request failed"})
+    }
+}
 // 62db0ca1dc63da4b9c5f1d80
 
 // 62db0d02dc63da4b9c5f1d85
@@ -92,6 +113,7 @@ const deleteUser = (req, res) => {
 }
 
 module.exports = {
-    getUsers, getUser, viewAnotherUser,
+    getUsers, getUser, getOpponent,
+    viewAnotherUser,
     updateUser, deleteUser
 }

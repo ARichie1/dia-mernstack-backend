@@ -12,6 +12,9 @@ router.get('/users', userControllers.getUsers)
 // GET SIGN IN USER
 router.get('/user', userControllers.getUser)
 
+// GET SIGN IN USER OPPONENT
+router.get('/user/opponent/:theirid', userControllers.getOpponent)
+
 // VIEW ANOTHER REGISTERED USER
 router.get('/user/:myid/view/:theirid', userControllers.viewAnotherUser)
 

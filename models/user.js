@@ -46,12 +46,11 @@ const InGameSchema = new mongoose.Schema({
     ready: {type: Boolean},
     host: {type: Boolean},
     join: {type: Boolean},
-    opponent: {type: Object},
+    opponent: {type: String},
     wins : {type: Number},
     losses : {type: Number},
     won : {type: Boolean},
     lose : {type: Boolean},
-    myCode: {type: String},
     guesses : {type: Array},
     moves : {type: Number},
     time : {type: Number},
@@ -131,9 +130,13 @@ const UserSchema = new mongoose.Schema({
         usdt: TokenSchema,
         purchaseHistory : [PurchaseHistorySchema]
     },
+    myCode: {
+        secret: {type: Number}
+    },
     inGame: InGameSchema,
     gameHistory: {
         gamePlaySocials: GamePlaySocialsSchema,
+        totalGamePlayHistories: PlayHistorySchema,
         singlePlayerGamePlayHistories: SinglePlayerGamePlayHistoriesSchema,
         multiplayerGamePlayHistories: MultiplayerGamePlayHistoriesSchema
     },
