@@ -22,7 +22,7 @@ const getUser = async (req, res) => {
         const user = await User.findById(ObjectId(id))
         
         const userDetails = {
-            email: user.email,
+            id, email: user.email,
             username: user.username,
             country: user.country,
             profileImage: user.profileImage,
