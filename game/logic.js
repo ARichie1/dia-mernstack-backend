@@ -9,9 +9,6 @@ let sio
 // value => socket object of socket with the key as it id
 let SOCKET_LIST = {};
 
-let playerSocket
-let player = null
-
 let allHosts = []
 let allAvailableHosts = []
 let allJoiners = []
@@ -20,15 +17,19 @@ let inacivePlayers = []
 
 let allPlayers = []
 
+let ROOM_FULL = false
+
 class Player {
     constructor(id, socket, info) {
         this.id = socket.id
         this.userId = id
         this.info = info
+        this.gameNavigationPos = ""
         this.game = {
             type: null, difficulty: null,
             connected: false, ready: false,
-            host: false, join: false, roomId: "", 
+            host: false, join: false, roomId: null, 
+            roomFull: false,
             opponent: {
                 id: "", info: {
                     username: "",
@@ -48,11 +49,18 @@ class Player {
             }
         }
 
-        Player.list[this.id] = this;
+        Player.list[(this.id).toString()] = this;
         
         return this
     }   
    
+
+
+
+
+
+
+
     deletePlayer () {
         allPlayers = allPlayers.filter(plyer => plyer.id !== this.id)
     }
@@ -90,20 +98,46 @@ class Player {
 Player.list = {};
 
 Player.onConnect = function (id, pSocket, info) {
-    if (Object.prototype.hasOwnProperty.call(Player.list, id)) {
-        pSocket.emit("playerCreationError", {error : "Player Exist Already !!"})        
-    }else{
-        player = new Player(id, pSocket, info);
-        pSocket.emit("playerCreated", {playerInfo : player.info})        
+    let playerExist = false
+    for (const key in Player.list) {
+        if (Object.prototype.hasOwnProperty.call(Player.list, key)) {
+            const plyr = Player.list[key];
+            if (plyr.userId === id){
+                Player.onDisconnect(plyr.id)
+                delete SOCKET_LIST[plyr.id];
+            } 
+        }
     }
+    if (Object.prototype.hasOwnProperty.call(Player.list, pSocket.id)) {
+        Player.onDisconnect(pSocket.id)
+        delete SOCKET_LIST[pSocket.id];
+    }
+    // if (playerExist) {
+    //     // pSocket.emit("playerCreationError", {error : "Player Exist Already !!"})  
+    //     pSocket.emit("playerAlreadyCreated", {playerInfo : player.info})       
+    // }
+    // else{
+
+    // Add Socket To SOCKET_LIST 
+    SOCKET_LIST[pSocket.id] = pSocket;
+
+    // Create a new instance of a player
+    const player = new Player(id, pSocket, info);
+    pSocket.emit("playerCreated", {playerInfo : "PLAYER CREATED"})        
+    
+
+    return player
+    // }
 
     // pSocket.on('keyPress', function (data) {
 
     // });
 }
 
-Player.onDisconnect = function (socket) {
-    delete Player.list[socket];
+Player.onDisconnect = function (socketId) {
+    console.log("About to delete : ", socketId);
+    
+    delete Player.list[socketId];
 }
 
 Player.update = function () {
@@ -116,19 +150,24 @@ Player.update = function () {
     // return pack;
 }
 
+// setInterval(() => {
+//     console.log("==========================");
+//     console.log("Player : ", player ? player.id: null);
+//     console.log("Opponent : ", player ? player.game.opponent.id : null);
+//     console.log("==========================");
+// }, 60000);
+
 
 const initializeGame = (io, client) => {
     sio = io
-    playerSocket = client
-
-    // Add Socket To SOCKET_LIST 
-    SOCKET_LIST[playerSocket.id] = playerSocket;
+    let playerSocket = client
+    let player = null
 
     const createNewPlayer = ({id, info}) => {
         console.log("creating a new player");
 
         // Create a PLyer for the new Socket
-        Player.onConnect(id, playerSocket, info);
+        player = Player.onConnect(id, playerSocket, info);
     }
 
     const addToRoom = async (roomId, hostOrJoin) => {
@@ -136,16 +175,33 @@ const initializeGame = (io, client) => {
         let connectedSockets = io.sockets.adapter.rooms.get(roomId)
         let socketRooms = Array.from(playerSocket.rooms.values()).filter((room) => room !== playerSocket.id)
         
-        if (socketRooms.length > 0 || connectedSockets && connectedSockets.size === 2){
+        if (hostOrJoin === "host"){
+            if (connectedSockets && connectedSockets.size > 0) {
+                console.log("RoomId as been used, Please choose another room Id to host");
+                playerSocket.emit("roomHostError", {
+                    error: "RoomId as been used, Please choose another room Id to host"
+                })
+                return null
+            }
+        }
+        // if (socketRooms.length > 0 || connectedSockets && connectedSockets.size === 2){
+        if (connectedSockets && connectedSockets.size === 2){
+            console.log("Room Join Error !!");
+            
             playerSocket.emit("roomJoinError", {
                 error: hostOrJoin === 
                     "host" ? "RoomId as been used, Please choose another room Id to host"
                     : "Room is full, Please choose another room to play"
                 })
         }else {
-            await playerSocket.join(roomId)   
+            playerSocket.join(roomId)
             player.game.connected = true
             player.game.roomId = roomId 
+
+            let roomSockets = io.sockets.adapter.rooms.get(roomId)
+                .forEach(pId => {
+                    console.log(`${roomId} Member : ${pId}`);
+                })
 
             if (hostOrJoin === "host") {
                 allHosts.push({hostId: playerSocket.id, 
@@ -153,17 +209,18 @@ const initializeGame = (io, client) => {
                 
                 player.game.host = true
                 player.game.join = false
-                console.log("User Created Room: ", roomId);
-                playerSocket.emit("roomCreated", {roomId})
+                console.log(`${player.info.username} (${player.id}) Created Room: `, roomId);
+            
+                io.emit("roomCreated", {roomId})
 
-                console.log(allAvailableHosts);
-                
             } else if (hostOrJoin === "join"){
                 allJoiners.push({JoinerId: playerSocket.id, roomId})
                 player.game.host = false
                 player.game.join = true
-                console.log(`${player.id} Joining Room: `, roomId);
-                playerSocket.emit("roomJoined", {roomId})
+                console.log(`${player.info.username} (${player.id}) Joined Room: `, roomId);
+                
+                player.game.roomFull = true
+                io.emit("roomJoined", {roomId})
             }
         }
     }
@@ -174,6 +231,17 @@ const initializeGame = (io, client) => {
     async function joinGame({roomId}) {
         await addToRoom(roomId, "join")
     }
+
+    async function isPlayerInRoom() {
+        if (player.game.roomId){
+            playerSocket.emit("checkedInRoom", {
+                inRoom: true, roomId: player.game.roomId,
+                join: player.game.join, host: player.game.join})
+        }
+        else {
+            playerSocket.emit("checkedInRoom", {inRoom: false})
+        }
+    }
     
     const getSocketGameRoom = (socket) => {
         const socketRooms = Array.from(socket.rooms.values()).filter((room) => room !== socket.id)
@@ -183,40 +251,131 @@ const initializeGame = (io, client) => {
 
     const setOpponent = async () => {
         let opponentSocketId = ""
-        let playersInMyRoomSocketId = io.sockets.adapter.rooms.get(player.game.roomId)
-        playersInMyRoomSocketId.forEach( psid => {
-            console.log("room psids : ", psid);
-            let pp = psid.toString()
-            console.log(pp);
+        console.log("my id: ", player.id);
+        
+        let playersInMyRoomSocketId = checkIfRoomIsFull()
+        console.log("rmfull : ", player.game.roomFull);
+        
+        if (player.game.roomFull) {
+            player.game.roomFull = true
+            playersInMyRoomSocketId.forEach( psid => {
+                // console.log("room psids : ", psid);
+                
+                if (psid !== player.id){
+                    opponentSocketId = psid.toString()
+                    if (!Player.list[opponentSocketId]){
+                        console.log("Not A Player");
+                        return false
+                    }else{
+                        console.log("Valid Player");
+                        console.log("opponentSocketId : ", opponentSocketId);
+                        player.game.opponent.id = psid.toString()
+                        return true
+                    }
+                }
+            })
+        }
+        else{
+            player.game.roomFull = false
+            console.log("No Opponent Yet!!");
+            console.log(" Waiting For Player To Join...");
             
-            if (psid !== player.id){
-                opponentSocketId = psid.toString()
-                player.game.opponent.id = psid.toString()
-                console.log("opponent: ", Player.list[opponentSocketId]);
-            }
-        })
-        return Player.list[opponentSocketId]
+            return false
+        }
     }
 
     const getOpponent = async () => {
-        if (isRoomFull()){
-            let opponent = setOpponent()
-            console.log(opponent)
-            playerSocket.emit("sendingOpponentInfo", {opponentInfo: opponent.info})
+        if (player.game.roomFull){
+            const validOpponent = setOpponent()
+            if (validOpponent) {
+                console.log("oppo id : ", player.game.opponent.id);
+                let opponent = Player.list[player.game.opponent.id]
+                console.log("opponent : ", opponent)
+                playerSocket.emit("sendingOpponentInfo", {opponentInfo: opponent.info})
+                if (player.game.join){
+                    sendPlayerInfoToHost()
+                }    
+            }else{
+                playerSocket.emit("sendingOpponentInfoError", {error: "No Opponent Yet!!"})    
+            }
+        }
+    }
+
+    // Player Who Joins Sends Info To Host
+    const sendPlayerInfoToHost = async () => {
+        let hostRecievedInfo = false
+        console.log(`${player.info.username} Sending to Hosts (${player.game.opponent.id}) ...`);        
+
+        // while (!hostRecievedInfo) {
+        let checkIfHostRecievedInfo = setInterval(async () => {
+            
+            await io.to(player.game.opponent.id).emit("sendingJoinerInfoToHost", {info: player.info})    
+            await playerSocket.on("hostRecievedInfo", ({state}) => {
+                hostRecievedInfo = state
+                console.log("Host Recieved Info Success :) ");
+            
+            })
+            // console.log("checking If Host Recieved Info ... ");
+            
+            if (hostRecievedInfo) {
+                console.log("Host Recieved Info.");
+                clearInterval(checkIfHostRecievedInfo)
+            }
+        }, 4000);
+    }
+
+    // Host Recieves The Info Joiner Sends And Sends To The Frontend
+    const recieveAndSendJoinerInfo = async () => {       
+        // io.to(player.game.opponent.id).emit("sendingJoinerInfoToHost", {info: player.info})    
+        
+        console.log("Scanning for joiner info ...");
+        
+        // let hostRecievedInfo = false
+        playerSocket.on("sendingJoinerInfoToHost", ({info}) => {
+            if (info) {
+                player.game.opponent.info = info
+                io.to(player.id).emit("sendingHostOpponent", {info})
+                io.to(player.game.opponent.id).emit("hostRecievedInfo", {state: true})
+                console.log("Host says : Received Info.");
+                
+            } else {
+                io.to(player.id).emit("sendingHostOpponent", {info : "No Opponent Yet !!"})
+                io.to(player.game.opponent.id).emit("hostRecievedInfo", {state: false})
+                // recieveAndSendJoinerInfo()
+                console.log("Host says : Couldn't Receive Info.");
+            }
+          })
+    }
+
+    const recieveOpponentInfo = async ({info}) => {
+        while (isRoomFull() === false) {
+            
+        }
+    }
+
+    const checkIfRoomIsFull = () => {
+        let playersInMyRoomSocketId = io.sockets.adapter.rooms.get(player.game.roomId)
+        if (playersInMyRoomSocketId && playersInMyRoomSocketId.size === 2){
+            player.game.roomFull = true
+            return playersInMyRoomSocketId
+        }else {
+            player.game.roomFull = false
+            return false
         }
     }
 
     const isRoomFull = () => {
-        let playersInMyRoomSocketId = io.sockets.adapter.rooms.get(player.game.roomId)
-        if (playersInMyRoomSocketId && playersInMyRoomSocketId.size === 2){
-            return true
-        }else {return false}
+        checkIfRoomIsFull()
+        console.log(`${player.info.username} - RoomFull : `, player.game.roomFull);
+        playerSocket.emit("checkedIsRoomFull", {roomFull: player.game.roomFull})
     }
 
-
-    const sendHosts = () => {
-        updateAvailableHost()
-        playerSocket.emit("sendingHosts", {allAvailableHosts})
+    const sendHosts = async () => {
+        allAvailableHosts = updateAvailableHost()
+        console.log(allAvailableHosts);
+        // playerSocket.emit("sendingHosts", {allAvailableHosts})
+        io.emit("sendingHosts", {allAvailableHosts})
+        
     }
 
     const updateAvailableHost = () => {
@@ -229,7 +388,7 @@ const initializeGame = (io, client) => {
                 }
             }
         })
-        console.log(allAvailableHosts);
+        return allAvailableHosts
     }
 
     function createNewGame() {
@@ -271,11 +430,17 @@ const initializeGame = (io, client) => {
     // host/join a game
     // create a new room per game
     // each room can only max 2 clients
+    playerSocket.on("isPlayerInRoom", isPlayerInRoom)
+
     playerSocket.on("hostGame", hostGame)
     playerSocket.on("getHosts", sendHosts)
     playerSocket.on("joinGame", joinGame)
 
+    playerSocket.on("isRoomFull", isRoomFull)
     playerSocket.on("getOpponent", getOpponent)
+
+    // Host Recieves Info from Opponent (Joiner)
+    playerSocket.on("sendJoinerInfoToHost", recieveAndSendJoinerInfo)
 
     // create a game
     playerSocket.on("createNewGame", createNewGame)
@@ -287,7 +452,7 @@ const initializeGame = (io, client) => {
     // socket and player list respectively
     playerSocket.on('disconnect', function(){
         delete SOCKET_LIST[playerSocket.id];
-        Player.onDisconnect(playerSocket.id);
+        // Player.onDisconnect(playerSocket.id);
     })
 }
 
