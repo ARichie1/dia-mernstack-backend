@@ -73,14 +73,15 @@ const signup = async (req, res) => {
 
 // Get Login Page
 const loginPage = (req, res) => {
-    res.render('login', {title: "Login User", error: ""});
+    // res.render('login', {title: "Login User", error: ""});
+    res.send({msg: 'login page'})
 }
 
 // Login User
 const login = async (req, res) => {
     const{ email, password} = req.body;
     console.log(email, password);
-    
+
     try{
         const user = await User.login(email, password);
         const token = createToken(user._id); 

@@ -14,11 +14,19 @@ const cookie = require('cookie-parser');
 const {requireAuth} = require('./middleware/authMiddleware');
 const { log } = require('console');
 
+const cors = require("cors")
+
 //The Express App
 const app = express();
 
 const server = http.createServer(app)
-const io = socketio(server)
+const io = socketio(server, { 
+            cors: {
+            origin: process.env.CLIENT_URL,
+            credentials: true,
+        }
+    }
+)
 const logic = require("./game/logic")
 
 // Connect To Mongodb Database
@@ -55,6 +63,13 @@ app.use(cookie());
 
 // Developer Feedback In Console
 app.use(morgan('dev'));
+
+app.use(
+    cors({
+      credentials: true,
+      origin: process.env.CLIENT_URL,
+    })
+);
 
 // Page Routing
 // Home Page Route

@@ -4,6 +4,8 @@ const { login } = require("../controllers/authControllers");
 
 let sio
 
+
+
 // Create a sockets list to hold all sockets
 // key => socket.id 
 // value => socket object of socket with the key as it id
@@ -27,7 +29,9 @@ class Player {
         this.gameNavigationPos = ""
         this.game = {
             type: null, difficulty: null,
-            connected: false, ready: false,
+            connected: false, 
+            order: null, isTurn: null,
+            readyToBuild: false, readyToPlay: false,
             host: false, join: false, roomId: null, 
             roomFull: false,
             opponent: {
@@ -36,6 +40,7 @@ class Player {
                     image: ""
                 }
             },
+            code: [], codeSaved: false,
             wins : 0, losses : 0,
             won : false, lose : false,
             guesses : [],
@@ -53,13 +58,11 @@ class Player {
         
         return this
     }   
-   
 
-
-
-
-
-
+    setTurn (order) {
+        if(order == 0){this.game.isTurn = true}
+        else{this.game.isTurn = false}
+    }
 
     deletePlayer () {
         allPlayers = allPlayers.filter(plyer => plyer.id !== this.id)
@@ -172,7 +175,7 @@ const initializeGame = (io, client) => {
     }
 
     // Verifies and adds a player to a room
-    const addToRoom = async (hostOrJoin, roomId, gameProperties) => {
+    const addToRoom = async (hostOrJoin, roomId, gameProperties, order) => {
 
         let connectedSockets = io.sockets.adapter.rooms.get(roomId)
         let socketRooms = Array.from(playerSocket.rooms.values()).filter((room) => room !== playerSocket.id)
@@ -204,18 +207,25 @@ const initializeGame = (io, client) => {
             player.game.difficulty = gameProperties.difficulty
 
             if (hostOrJoin === "host") {
+                player.game.order = Math.floor(Math.random() * 2)
+                player.setTurn(player.game.order)
+
                 allHosts.push({hostId: playerSocket.id, 
                     roomId, 
                     diff: player.game.difficulty,
+                    order: player.game.order,
                     image: player.info.image})
                 
                 player.game.host = true
                 player.game.join = false
                 console.log(`${player.info.username} (${player.id}) Created Room: `, roomId);
             
-                io.emit("roomCreated", {roomId})
+                io.emit("roomCreated", {roomId, hostTurnOrder: player.game.order})
 
             } else if (hostOrJoin === "join"){
+                player.game.order = order
+                player.setTurn(player.game.order)
+
                 allJoiners.push({JoinerId: playerSocket.id, roomId})
                 player.game.host = false
                 player.game.join = true
@@ -233,8 +243,8 @@ const initializeGame = (io, client) => {
     }
 
     // joinGame - Join a room
-    async function joinGame({roomId, gameProperties}) {
-        await addToRoom("join", roomId, gameProperties)
+    async function joinGame({roomId, gameProperties, order}) {
+        await addToRoom("join", roomId, gameProperties,  order)
     }
 
     // Set the player's opponent
@@ -349,31 +359,117 @@ const initializeGame = (io, client) => {
     }
 
     // Get and Send The Game Properties The Hosts Sends To The Room
-    const saveGameProperties = async ({properties}) => {
-        console.log("gameProperties", properties);
+    const saveGameProperties = async ({gameProperties, isReady}) => {
+        console.log("gameProperties", gameProperties);
 
         // Host Saves The Game Properties
         console.log("Host Saving Game Props ...");
-        player.game.difficulty = properties.difficulty
+        player.game.difficulty = gameProperties.difficulty
 
-        // console.log("Sending Game Props To Room Members ...")
-        // io.to(player.game.roomId).emit("hostSendingGameProperties", {gameProperties: properties})
+        // Set The Host Ready State
+        console.log("Host is ready : ", isReady);
+        player.game.readyToBuild = isReady
     }
 
-    // playerSocket.on("hostSendingGameProperties", ({gameProperties}) => {
-
-    // })
-
+    // Joiner Fetches the hosts saved game properties
     const requestGamePropertiesFromHost = async () => {
         let opponent = Player.list[player.game.opponent.id]
 
-        console.log("Opponent Difficulty : ", opponent.game.difficulty);
-        
         console.log("Joiner Saving Game Props ...");
         player.game.difficulty = opponent.game.difficulty
+        player.game.readyToBuild = opponent.game.readyToBuild 
 
         console.log("Sending Game Props To Joiner Socket Client ...");   
-        playerSocket.emit("sendingGameProperties", {gameProperties: opponent.game.difficulty})
+        playerSocket.emit("sendingGameProperties", {gameProperties: opponent.game.difficulty, hostIsReady: opponent.game.readyToBuild})
+    }
+
+    // Save Player Secret Code
+    const savePlayerCode = async ({code}) => {
+        player.game.code  = code
+        player.game.codeSaved = true
+        playerSocket.emit("codeSaved", {saved: true})
+    }
+
+    const readyToPlay = async ({ready}) => {
+        player.game.readyToPlay = ready
+
+        playerSocket.emit("sentReadyToPlay", {sent: true})
+    }
+
+    // Check if opponent is ready to play
+    const checkIfOpponentReadyToPlay = async () => {
+        let opponent = Player.list[player.game.opponent.id]
+
+        console.log("Checking Oppo ready state ...");
+        if (opponent.game.readyToPlay){
+            console.log("Opponent Is Ready To Play :)");   
+            playerSocket.emit("opponentReadyToPlayState", {opponentIsReady: opponent.game.readyToPlay})
+        }else {
+            console.log("Opponent Is Not Ready To Play :)");   
+            playerSocket.emit("opponentReadyToPlayState", {opponentIsReady: opponent.game.readyToPlay})
+        }
+    }
+
+    // Send Player Real Time Active Prediction To Opponent
+    const sendActivePredictionToOpponent = async ({selection}) => {
+        console.log("Sending My AP To Opponent ...");
+        console.log("selection : ", selection);
+        
+        io.to(player.game.opponent.id).emit("sendingMyActivePrediction", {selection})
+        playerSocket.emit("sentActivePediction", {sent: true})
+    }
+
+    // Recieve and Send Opponent's Real Time Active Prediction To Client
+    const recieveOpponentActivePrediction = async ({selection}) => {
+        console.log("Recieving and sending opponents AP ..."); 
+        playerSocket.emit("sendingOpponentActivePrediction", {selection})
+    }
+
+    // Send Player Real Time Active Prediction To Opponent
+    const sendCurrentPredictionToOpponent = async ({selection}) => {
+        console.log("Sending My CP To Opponent ...");
+        console.log("selection : ", selection);
+        player.game.isTurn = false
+        playerSocket.emit("sentCurrentPrediction", {
+            results: [
+                {title: "dead", value: "D", emoji: "💀", id: 0},
+                {title: "dead", value: "D", emoji: "💀", id: 1},
+                {title: "injured", value: "I", emoji: "🤕", id: 2},
+                {title: "alive", value: "A", emoji: "😁", id: 3},
+            ],
+            isTurn: player.game.isTurn
+        })
+        io.to(player.game.opponent.id).emit("sendingMyCurrentPrediction", {
+            selection, 
+            results: [
+                {title: "dead", value: "D", emoji: "💀", id: 0},
+                {title: "dead", value: "D", emoji: "💀", id: 1},
+                {title: "injured", value: "I", emoji: "🤕", id: 2},
+                {title: "alive", value: "A", emoji: "😁", id: 3},
+            ]
+        })
+        console.log("Sending My CP To Opponent comfirmed.");
+    }
+
+    // Recieve and Send Opponent's Real Time Active Prediction To Client
+    const recieveOpponentCurrentPrediction = async ({selection, result}) => {
+        console.log("Recieving and sending opponents CP To Client Side ..."); 
+        playerSocket.emit("sendingOpponentCurrentPrediction", {selection, result})
+    }
+
+    // Send Player Real Time Active Prediction To Opponent
+    const sendPredictionsToOpponent = async ({predictions}) => {
+        console.log("Sending My Ps To Opponent ...");
+        io.to(player.game.opponent.id).emit("sendingMyPredictions", {predictions})   
+    
+        playerSocket.emit("sentPedictions", {result: true})
+
+    }
+
+    // Recieve and Send Opponent's Real Time Active Prediction To Client
+    const recieveOpponentPredictions = async ({predictions}) => {
+        console.log("Recieving and sending opponents Ps To Client Side ..."); 
+        playerSocket.emit("sendingOpponentPredictions", {predictions})
     }
 
     function createNewGame() {
@@ -430,6 +526,19 @@ const initializeGame = (io, client) => {
     // Joiner Request For The New Game Properties
     playerSocket.on("requestGamePropertiesFromHost", requestGamePropertiesFromHost)
     
+    // Save Player Secret Code
+    playerSocket.on("saveCode", savePlayerCode)
+    playerSocket.on("readyToPlay", readyToPlay)
+    playerSocket.on("checkIfOpponentReadyToPlay", checkIfOpponentReadyToPlay)
+
+    // In-Game
+    playerSocket.on("sendingActivePrediction", sendActivePredictionToOpponent)
+    playerSocket.on("sendingMyActivePrediction", recieveOpponentActivePrediction)
+    playerSocket.on("sendingCurrentPrediction", sendCurrentPredictionToOpponent)
+    playerSocket.on("sendingMyCurrentPrediction", recieveOpponentCurrentPrediction)
+    playerSocket.on("sendingPredictions", sendPredictionsToOpponent)
+    playerSocket.on("sendingMyPredictions", recieveOpponentPredictions)
+
     // create a game
     playerSocket.on("createNewGame", createNewGame)
     playerSocket.on("requestUsername", requestUsername)
