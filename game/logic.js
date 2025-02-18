@@ -366,10 +366,16 @@ const initializeGame = (io, client) => {
         console.log("Host Saving Game Props ...");
         player.game.difficulty = gameProperties.difficulty
 
-        // Set The Host Ready State
-        console.log("Host is ready : ", isReady);
-        player.game.readyToBuild = isReady
+        if (gameProperties.multiplayer) {
 
+            console.log("Multiplayer Mode")
+            // Set The Host Ready State
+            console.log("Host is ready : ", isReady);
+            player.game.readyToBuild = isReady
+        }else{
+            console.log("Singleplayer Mode")
+        }
+        
         playerSocket.emit("savedGameProperties", {saved: true})
     }
 
