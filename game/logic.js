@@ -369,6 +369,8 @@ const initializeGame = (io, client) => {
         // Set The Host Ready State
         console.log("Host is ready : ", isReady);
         player.game.readyToBuild = isReady
+
+        playerSocket.emit("savedGameProperties", {saved: true})
     }
 
     // Joiner Fetches the hosts saved game properties
