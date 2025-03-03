@@ -1,10 +1,11 @@
 const { forIn } = require("lodash");
 const { username } = require("../models/userDefaults");
 const { login } = require("../controllers/authControllers");
+// const { generator } = require("./codeGenerator")
+const codeGenerator = require("./codeGenerator")
+const resultGenerator = require("./resultGenerator")
 
 let sio
-
-
 
 // Create a sockets list to hold all sockets
 // key => socket.id 
@@ -33,7 +34,7 @@ class Player {
             order: null, isTurn: null,
             readyToBuild: false, readyToPlay: false,
             host: false, join: false, roomId: null, 
-            roomFull: false,
+            roomFull: false, isMultiplayer: false,
             opponent: {
                 id: "", info: {
                     username: "",
@@ -41,6 +42,7 @@ class Player {
                 }
             },
             code: [], codeSaved: false,
+            computerCode: [], computerCodeSaved: false,
             wins : 0, losses : 0,
             won : false, lose : false,
             guesses : [],
@@ -366,14 +368,22 @@ const initializeGame = (io, client) => {
         console.log("Host Saving Game Props ...");
         player.game.difficulty = gameProperties.difficulty
 
-        if (gameProperties.multiplayer) {
+        console.log("Game diff : ", player.game.difficulty);
+        
 
+        if (gameProperties.multiplayer) {
             console.log("Multiplayer Mode")
+            player.game.isMultiplayer = true
+
             // Set The Host Ready State
             console.log("Host is ready : ", isReady);
             player.game.readyToBuild = isReady
         }else{
             console.log("Singleplayer Mode")
+            player.game.isMultiplayer = false
+
+            // Generate Computer Code
+            saveComputerCode(player.game.difficulty.agents)
         }
         
         playerSocket.emit("savedGameProperties", {saved: true})
@@ -396,6 +406,14 @@ const initializeGame = (io, client) => {
         player.game.code  = code
         player.game.codeSaved = true
         playerSocket.emit("codeSaved", {saved: true})
+    }
+
+    // Generate Computer's Secret Code
+    const saveComputerCode = (diff) => {
+        const code = codeGenerator.generateCode(diff)
+        player.game.computerCode  = code
+        player.game.computerCodeSaved = true
+        playerSocket.emit("computerCodeSaved", {saved: true})
     }
 
     const readyToPlay = async ({ready}) => {
@@ -436,26 +454,60 @@ const initializeGame = (io, client) => {
     // Send Player Real Time Active Prediction To Opponent
     const sendCurrentPredictionToOpponent = async ({selection}) => {
         console.log("Sending My CP To Opponent ...");
+        
         console.log("selection : ", selection);
+        console.log("sCode : ", player.game.computerCode);
+        console.log("diff : ", player.game.difficulty);
+        
+
+        if (player.game.isMultiplayer) {
+            let opponent = Player.list[player.game.opponent.id]
+            let opponentCode = []
+            opponent.game.code.forEach(code => {
+                opponentCode = [...opponentCode, code.toString()]
+            });
+            console.log("oppo code : ", opponent.game.code);
+            console.log("oppo code STR : ", opponentCode);
+        }
+        
+        let result = []
+        result = resultGenerator.scanSelection(
+            player.game.isMultiplayer ? opponentCode : player.game.computerCode, 
+            selection,
+            player.game.difficulty.agents
+        )
+        console.log(result);
+
         player.game.isTurn = false
+
         playerSocket.emit("sentCurrentPrediction", {
-            results: [
-                {title: "dead", value: "D", emoji: "💀", id: 0},
-                {title: "dead", value: "D", emoji: "💀", id: 1},
-                {title: "injured", value: "I", emoji: "🤕", id: 2},
-                {title: "alive", value: "A", emoji: "😁", id: 3},
-            ],
+            results: result,
             isTurn: player.game.isTurn
         })
+
         io.to(player.game.opponent.id).emit("sendingMyCurrentPrediction", {
             selection, 
-            results: [
-                {title: "dead", value: "D", emoji: "💀", id: 0},
-                {title: "dead", value: "D", emoji: "💀", id: 1},
-                {title: "injured", value: "I", emoji: "🤕", id: 2},
-                {title: "alive", value: "A", emoji: "😁", id: 3},
-            ]
+            results: result
         })
+
+        // playerSocket.emit("sentCurrentPrediction", {
+        //     results: [
+        //         {title: "dead", value: "D", emoji: "💀", id: 0},
+        //         {title: "dead", value: "D", emoji: "💀", id: 1},
+        //         {title: "injured", value: "I", emoji: "🤕", id: 2},
+        //         {title: "alive", value: "A", emoji: "😁", id: 3},
+        //     ],
+        //     isTurn: player.game.isTurn
+        // })
+        // io.to(player.game.opponent.id).emit("sendingMyCurrentPrediction", {
+        //     selection, 
+        //     results: [
+        //         {title: "dead", value: "D", emoji: "💀", id: 0},
+        //         {title: "dead", value: "D", emoji: "💀", id: 1},
+        //         {title: "injured", value: "I", emoji: "🤕", id: 2},
+        //         {title: "alive", value: "A", emoji: "😁", id: 3},
+        //     ]
+        // })
         console.log("Sending My CP To Opponent comfirmed.");
     }
 
