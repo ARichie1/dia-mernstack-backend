@@ -459,10 +459,9 @@ const initializeGame = (io, client) => {
         console.log("sCode : ", player.game.computerCode);
         console.log("diff : ", player.game.difficulty);
         
-
+        let opponentCode = []
         if (player.game.isMultiplayer) {
             let opponent = Player.list[player.game.opponent.id]
-            let opponentCode = []
             opponent.game.code.forEach(code => {
                 opponentCode = [...opponentCode, code.toString()]
             });
