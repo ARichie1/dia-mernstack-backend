@@ -35,6 +35,8 @@ class Player {
             readyToBuild: false, readyToPlay: false,
             host: false, join: false, roomId: null, 
             roomFull: false, isMultiplayer: false,
+            isTimeCountDownEnabled: null,
+            isMoveCountDownEnabled: null,
             opponent: {
                 id: "", info: {
                     username: "",
@@ -368,9 +370,15 @@ const initializeGame = (io, client) => {
         console.log("Host Saving Game Props ...");
         player.game.difficulty = gameProperties.difficulty
 
+        
+        player.game.isTimeCountDownEnabled = gameProperties.isTimeCountDownEnabled
+        player.game.isMoveCountDownEnabled = gameProperties.isMoveCountDownEnabled
+
+        console.log("ptcd : ", player.game.isTimeCountDownEnabled);
+        console.log("pmcd : ", player.game.isMoveCountDownEnabled);
+        
         console.log("Game diff : ", player.game.difficulty);
         
-
         if (gameProperties.multiplayer) {
             console.log("Multiplayer Mode")
             player.game.isMultiplayer = true
@@ -395,10 +403,23 @@ const initializeGame = (io, client) => {
 
         console.log("Joiner Saving Game Props ...");
         player.game.difficulty = opponent.game.difficulty
+
+        console.log("otcd : ", opponent.game.isTimeCountDownEnabled);
+        console.log("omcd : ", opponent.game.isMoveCountDownEnabled);
+        
+        player.game.isTimeCountDownEnabled = opponent.game.isTimeCountDownEnabled
+        player.game.isMoveCountDownEnabled = opponent.game.isMoveCountDownEnabled
         player.game.readyToBuild = opponent.game.readyToBuild 
 
         console.log("Sending Game Props To Joiner Socket Client ...");   
-        playerSocket.emit("sendingGameProperties", {gameProperties: opponent.game.difficulty, hostIsReady: opponent.game.readyToBuild})
+        playerSocket.emit("sendingGameProperties", {
+            gameProperties: {
+                gameDiff: opponent.game.difficulty,
+                gameTimeCntDown: opponent.game.isTimeCountDownEnabled,
+                gameMoveCntDown: opponent.game.isMoveCountDownEnabled
+            }, 
+            hostIsReady: opponent.game.readyToBuild
+        })
     }
 
     // Save Player Secret Code
