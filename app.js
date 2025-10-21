@@ -32,11 +32,7 @@ const logic = require("./game/logic")
 // Connect To Mongodb Database
 // Database Connection Configuration.
 const dbUri = process.env.DBURI;
-mongoose.connect(dbUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    tls: true
-    })
+mongoose.connect(dbUri)
     .then( (result) => {
         console.log('Connection to database successfully made.'); 
         // app.listen(process.env.PORT)
