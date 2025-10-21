@@ -82,7 +82,7 @@ app.get('/', (req, res) => {
 app.use("/api/auth/user", authRoutes);
 
 // User Routes
-app.use("/api", userRoutes);
+app.use("/api/data", userRoutes);
 
 // About Page
 app.get('/about', requireAuth, (req, res) => {
